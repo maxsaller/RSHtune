@@ -1,0 +1,63 @@
+"""
+RSHtune  - Calculation.
+
+Setup adn running of calculations.
+Dependencies: sys, time, logging, subprocess
+"""
+import sys
+import time
+import logging
+import subprocess as sb
+from .input import QchemInput
+
+
+class QchemCalculation():
+    """Object for setting up and running a Qchem calculation."""\
+
+    def __init__(self, fname: str, jname:str = None, nthreads:int = None) -> None:
+        """Initialize input."""
+        self.initLogging()
+
+        # Input File
+        self.log.info(f"Creating QChem calculation from <{fname}> input file.")
+        self.input = QchemInput(fname)
+        
+        # Molecular Geometry
+        self.molecule = self.input.input["molecule"][0][1]
+        self.log.info(f"Using molecular geometry in <{self.molecule}>.")
+        
+        # Jobname
+        self.jobName = fname.split(".")[0] if jname is None else jname
+        self.log.info(f"This Qchem job will use jobname '{self.jobName}'.")
+
+        # Number of Threads
+        self.numThreads = 1 if nthreads is None else nthreads
+        
+    def initLogging(self) -> None:
+        """Initialize logging."""
+        self.log = logging.getLogger("QchemCalculation")
+        self.log.setLevel(logging.INFO)
+        logStreamHandler = logging.StreamHandler()
+        logStreamHandler.setLevel(logging.INFO)
+        logFormatter = logging.Formatter("%(asctime)s " +
+                                       "%(name)s:%(levelname)s " +
+                                       "%(message)s")
+        logStreamHandler.setFormatter(logFormatter)
+        if (self.log.hasHandlers()):
+            self.log.handlers.clear()
+        self.log.addHandler(logStreamHandler)
+
+    def submit(self) -> None:
+        """Run a single Qchem caluclation."""
+        self.log.info(f"Running Qchem with {self.numThreads} threads.")
+        _start = time.time()
+        self.calc = sb.run(["qchem",
+                            "-save",
+                            "-nt",
+                            f"{self.numThreads}",
+                            f"{self.jobName}.in",
+                            f"{self.jobName}.out",
+                            f"{self.jobName}"], capture_output=True
+               )
+        self.log.info(f"Completed Qchem run in {time.time() - _start:.1f}s.")
+        self.log.info(f"Output written to <{self.jobName}.out>.")

@@ -10,7 +10,7 @@ C PBE    1.000
 $end
 
 $rem
-jobtype = sp
+jobtype=sp
 exchange = general
 correlation = none
 basis= cc-pVTZ
@@ -19,7 +19,7 @@ geom_opt_maxcyc       500
 max_scf_cycles        100000
 mem_static            4000
 mem_total             48000
-omega                 184 
+omega                 184       ! Range separation parameter
 omega2                184
 lrc_dft               true
 src_dft               2
@@ -40,6 +40,7 @@ GEN_SCFMAN            0             #old scfman
 CIS_DYNAMIC_MEM       TRUE
 CIS_RELAXED_DENSITY   TRUE
 USE_NEW_FUNCTIONAL    TRUE
+ANISO_SRSH_INTERFACE_ATOM           25
 $end
 
 $peqs

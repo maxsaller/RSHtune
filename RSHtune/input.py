@@ -11,23 +11,19 @@ import logging
 class QchemInput():
     """Object for reading and modifying input for Q-Chem."""
 
-    def __init__(self, file: str) -> None:
+    def __init__(self, fname: str) -> None:
         """Initialize input."""
         self.initLogging()
 
-        self.file = file
+        self.inputFile = fname
         try:
-            with open(self.file, "r") as f:
-                self.log.info(f"Reading input from <{self.file}>")
+            with open(self.inputFile, "r") as f:
+                self.log.info(f"Reading input from <{self.inputFile}>.")
                 self.parseInput(f.readlines())
         except FileNotFoundError:
-            self.log.error(f"File <{self.file}> could not be found.")
+            self.log.error(f"File <{self.inputFile}> could not be found.")
             self.log.error(f"Exiting!")
             sys.exit()
-
-        # User definition of XC functional handling
-        if "xc_functional" in self.input.keys():
-            self.parseXCfunctional()
 
     def initLogging(self) -> None:
         """Initialize logging."""
@@ -39,6 +35,8 @@ class QchemInput():
                                          "%(name)s:%(levelname)s " +
                                          "%(message)s")
         logStreamHandler.setFormatter(logFormatter)
+        if (self.log.hasHandlers()):
+            self.log.handlers.clear()
         self.log.addHandler(logStreamHandler)
 
     def parseInput(self, content: list[str]) -> None:
@@ -50,77 +48,49 @@ class QchemInput():
                 ln = self.lineParse(line)
                 if ln[0][0] == "$" and ln[0][1:] != "end":
                     key = ln[0][1:].lower()
-                    self.input[key] = {}
-                if ln[0][0] != "$":
-                    try:
-                        if ln[0].upper() not in self.input[key].keys():
-                            self.input[key][ln[0].upper()] = ln[1:]
-                        else:
-                            if ln[1:] != self.input[key][ln[0]]:
-                                self.input[key][ln[0].upper()].append(ln[1])
-                                self.input[key][ln[0].upper()].append(ln[2])
-                            else:
-                                self.log.warning(f"Possible duplicate line " +
-                                                 f"in input file:\n" +
-                                                 f"{line.strip()}")
-                    except KeyError:
-                        self.log.error("Check input file for $section" +
-                                       "inconsistencies!")
+                    self.input[key] = []
+                elif ln[0][0] != "$":
+                    self.input[key].append(ln)
         self.log.info(f"Read {len(content)} lines, " +
-                      f"finding {len(self.input.keys())} input sections ")
+                      f"finding {len(self.input.keys())} input sections.")
 
     def lineParse(self, line: str) -> list[str]:
         """Extract line arguments and unify styling."""
-        ln = line.split("#")[0]
+        ln = line.split("#")[0].split("!")[0]
         ln = ln.strip().split()
 
         for j, item in enumerate(ln):
             if item == "=":
                 ln.pop(j)
-            if item[0] == "=" and len(item) > 1:
+            elif item[0] == "=" and len(item) > 1:
                 ln[j] = ln[j][1:]
-            if item[-1] == "=" and len(item) > 1:
+            elif item[-1] == "=" and len(item) > 1:
                 ln[j] = ln[j][:-1]
+            elif "=" in item:
+                ln = [*ln[j].split("="), *ln[j+1:]]
         return ln
 
     def valParse(self, val: str) -> str:
         """Baeutify values."""
-        if val.lower() in ["true", "false"]:
+        if type(val) == str and val.lower() in ["true", "false"]:
             return val.upper()
-        return f"{val:10s}"
+        return val
 
-    def getSection(self, sec: str) -> str:
-        """Return the contents of a $ section in the input as a string."""
-        try:
-            return self.input[sec.lower()].__repr__()
-        except KeyError:
-            self.log.error(f"Input contains no ${sec} section!")
-            sys.exit()
-
-    def parseXCfunctional(self) -> None:
-        """Create a dict to handle user-sepcification of the XC fuctional."""
-        XC = self.input["xc_functional"]
-        self.XCfunc = {}
-        for k in XC.keys():
-            if len(XC[k]) == 2:
-                self.XCfunc[k] = {XC[k][0]: float(XC[k][1])}
-            else:
-                self.XCfunc[k] = {XC[k][i]: float(XC[k][i+1]) for i in range(0, len(XC[k]), 2)}
+    def keyParse(self, key: str) -> str:
+        """Baeutify keys."""
+        return f"{key.lower():<30s}"
 
     def __repr__(self) -> str:
         """Provide string representation of object."""
         repr = ""
         for sec in self.input.keys():
             repr += f"${sec}\n"
-            for key in self.input[sec].keys():
-                repr += f"  {key:20s}"
-                for val in self.input[sec][key]:
-                    if type(val) == list:
-                        repr += f"\n  {key:20s}"
-                        for val2 in val:
-                            repr += f"{self.valParse(val2)} "
-                    else:
-                        repr += f"{self.valParse(val)} "
-                repr += "\n"
+            for line in self.input[sec]:
+                if len(line) == 2:
+                    repr += f"{self.keyParse(line[0])} {self.valParse(line[1])}\n"
+                else:
+                    for item in line:
+                        repr += f"{item:<10s}"
+                    repr += "\n"
             repr += f"$end\n\n"
         return repr

@@ -1,6 +1,12 @@
 # RSHtune
 
 
+### Installation
+In order to be able to use this library, add the following to your `.bashrc` file:
+```bash
+export PYTHONPATH=$PYTHONPATH:<path/to/RSHtune>
+```
+
 ### License
 **Copyright 2003 Maximilian Saller**
 

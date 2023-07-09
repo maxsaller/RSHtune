@@ -11,6 +11,13 @@ if __name__ == "__main__":
     import RSHtune as tune
 
     # Input Testing
-    inp = tune.QchemInput(file="example.in")
-    print(inp.getSection("xc_functional"))
-    print(inp.XCfunc)
+    # inp = tune.QchemInput(fname="example.in")
+    # print(inp)
+
+    # Calculation Testing
+    # calc = tune.QchemCalculation(fname="RSH.in", jname="RSH", nthreads=24)
+    # calc.submit()
+
+    # Tuning Testing
+    tune = tune.QchemTuning(fname="RSH.in", omega=0.2, nthreads=24)
+    

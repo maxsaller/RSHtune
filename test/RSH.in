@@ -1,0 +1,22 @@
+$molecule
+  read  water.mol
+$end
+
+$xc_functional                  # This section lets us make a custom DFT functional
+  C PBE    1.00                 # Correlation 100% from PBE
+  X wPBE   0.80                 # 80% PBE exchange in the short range
+  X HF     0.20                 # 20% Hartree-Fock exchange in the short range
+$end
+
+$rem
+  jobtype           sp          # We just do a single-point energy caclculation
+  exchange          general     # Since we specify the exchange-correlation...
+  correlation       none        # ...functional above, we don't need to add it here
+  basis             cc-pVTZ     # Basis set as usual
+  scf_convergence   8           # SCF convergence as standard
+  max_scf_cycles    1000        # Give it a good number of SCF cycles to converge
+  mem_static        3000        # 3000 MB of memory for FORTRAN arrays
+  mem_total         16000       # 16000 MB of memory in total
+  lrc_dft           true        # Use 100% HF (exact) exchange in the long range
+  omega             237         # Range-separation parameter between long and short range (<< THIS IS TUNED) [237 == 0.237]
+$end
