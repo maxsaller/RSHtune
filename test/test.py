@@ -30,7 +30,7 @@ if __name__ == "__main__":
     print(f"\n\n\n{80*'='}\n\n\n")
 
     # Tuning Run Testing
-    omega = [float(i)/1000 for i in range(333,337)]
+    omega = [float(i)/1000 for i in range(333, 337)]
     print(f"# omega         J_OT\n{22*'#'}")
     for o in omega:
         tuning_run = tune.QchemTuning(fname="RSH.in",

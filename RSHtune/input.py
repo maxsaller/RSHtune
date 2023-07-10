@@ -28,7 +28,7 @@ class QchemInput():
     def initLogging(self, level: str) -> None:
         """Initialize logging."""
         _log_levels = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20,
-                        "DEBUG": 10, "NOTSET": 0}
+                       "DEBUG": 10, "NOTSET": 0}
         self.logLevel = (level, _log_levels[level])
         self.log = logging.getLogger("QchemInput")
         self.log.setLevel(logging.INFO)
@@ -90,7 +90,8 @@ class QchemInput():
             repr += f"${sec}\n"
             for line in self.input[sec]:
                 if len(line) == 2:
-                    repr += f"{self.keyParse(line[0])} {self.valParse(line[1])}\n"
+                    repr += f"{self.keyParse(line[0])} "
+                    repr += f"{self.valParse(line[1])}\n"
                 else:
                     for item in line:
                         repr += f"{item:<10s}"

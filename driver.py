@@ -1,31 +1,32 @@
 """
-RSHtune - Driver
+RSHtune - Driver.
 
 Driver script for the RSHtune package
-DependenciesL os, argparse, RSHtune (on PYTHONPATH)
+DependenciesL os, sys, argparse, RSHtune (on PYTHONPATH)
 """
 import os
+import sys
 import RSHtune as tune
 import argparse as argp
 
 
-def dryRun(inputFile: str, dir: str = None,
-           multiplicities: list = None) -> None:
+def dryRun(inputFile: str, dir: str,
+           multiplicities: list[int]) -> None:
     """Navigate to a directory and analyze tuning files already present."""
     if dir is not None:
         os.chdir(dir)
     _dirContents = os.listdir('.')
-    _omega = { float(i.split("_")[0].split('w')[1])/1000 for i in _dirContents
-                if i.split(".")[-1] == "out"
-                and f"{i.split('_')[0]}_neutral.out" in _dirContents
-                and f"{i.split('_')[0]}_anion.out" in _dirContents
-                and f"{i.split('_')[0]}_cation.out" in _dirContents }
+    _omega = {float(i.split("_")[0].split('w')[1])/1000 for i in _dirContents
+              if i.split(".")[-1] == "out"
+              and f"{i.split('_')[0]}_neutral.out" in _dirContents
+              and f"{i.split('_')[0]}_anion.out" in _dirContents
+              and f"{i.split('_')[0]}_cation.out" in _dirContents}
     print(f"#omega         J_OT\n{22*'#'}")
     for _o in sorted(list(_omega)):
         if multiplicities is not None:
             tuning_run = tune.QchemTuning(fname=inputFile,
                                           omega=_o,
-                                          nthreads=nthreads,
+                                          nthreads=1,
                                           neutralSpMlt=multiplicities[0],
                                           anionSpMlt=multiplicities[1],
                                           cationSpMlt=multiplicities[2],
@@ -42,9 +43,10 @@ def dryRun(inputFile: str, dir: str = None,
         except ValueError:
             print(f"{_o:.3f}         ERROR")
 
+
 def singlePoint(inputFile: str, nthreads: int,
-                omega: float, dir:str = None,
-                multiplicities: list = None) -> None:
+                omega: float, dir: str,
+                multiplicities: list[int]) -> None:
     """Run a single tuning calculation for a given value of omega."""
     if dir is not None:
         os.chdir(dir)
@@ -70,9 +72,10 @@ def singlePoint(inputFile: str, nthreads: int,
     except ValueError:
         print(f"{omega:.3f}         ERROR")
 
+
 def rangeTuning(inputFile: str, nthreads: int,
-                omega: list, dir:str = None,
-                multiplicities: list = None) -> None:
+                omega: list, dir: str,
+                multiplicities: list[int]) -> None:
     """Run a series of tuning calculation over a range of omega."""
     if dir is not None:
         os.chdir(dir)
@@ -138,4 +141,4 @@ if __name__ == "__main__":
     if args.omegaRange:
         print(f"# Tuning calculations over range omega={args.omegaRange}.")
         rangeTuning(args.inputFile, args.numThreads, args.omegaRange, args.dir,
-                    args.multiplicities)        
+                    args.multiplicities)
