@@ -11,9 +11,9 @@ import logging
 class QchemInput():
     """Object for reading and modifying input for Q-Chem."""
 
-    def __init__(self, fname: str) -> None:
+    def __init__(self, fname: str, loggerLevel: str = "INFO") -> None:
         """Initialize input."""
-        self.initLogging()
+        self.initLogging(loggerLevel)
 
         self.inputFile = fname
         try:
@@ -25,12 +25,15 @@ class QchemInput():
             self.log.error(f"Exiting!")
             sys.exit()
 
-    def initLogging(self) -> None:
+    def initLogging(self, level: str) -> None:
         """Initialize logging."""
+        _log_levels = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20,
+                        "DEBUG": 10, "NOTSET": 0}
+        self.logLevel = (level, _log_levels[level])
         self.log = logging.getLogger("QchemInput")
         self.log.setLevel(logging.INFO)
         logStreamHandler = logging.StreamHandler()
-        logStreamHandler.setLevel(logging.INFO)
+        logStreamHandler.setLevel(self.logLevel[1])
         logFormatter = logging.Formatter("%(asctime)s " +
                                          "%(name)s:%(levelname)s " +
                                          "%(message)s")

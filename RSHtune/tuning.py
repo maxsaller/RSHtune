@@ -21,9 +21,10 @@ class QchemTuning():
     def __init__(self, fname: str, omega: float, nthreads: int = None,
                  neutralSpMlt: int = None,
                  anionSpMlt: int = None,
-                 cationSpMlt: int = None) -> None:
+                 cationSpMlt: int = None,
+                 loggerLevel: str = "INFO") -> None:
         """Set up the tuning process."""
-        self.initLogging()
+        self.initLogging(loggerLevel)
 
         # Check for input file
         if not os.path.isfile(fname):
@@ -31,28 +32,26 @@ class QchemTuning():
             sys.exit()
 
         # Neutral Input
-        self.neutralInput = QchemInput(fname=fname)
+        self.neutralInput = QchemInput(fname=fname,
+                                       loggerLevel=self.logLevel[0])
         self.neutralMolecule = self.neutralInput.input["molecule"][0][1]
 
-        # Spin Multiplities
-        self.spinMulti(neutralSpMlt, anionSpMlt, cationSpMlt)
-        
-        # Generate molecule files
-        self.createGeometries()
+        # Number of Threads
+        self.numThreads = 1 if nthreads is None else nthreads
 
-        # Generate input files
+        self.setSpinMultiplicities(neutralSpMlt, anionSpMlt, cationSpMlt)
+        self.createGeometries()
         self.createInputFiles(omega)
 
-        # Run Qchem Calculations
-        self.runCalculations(nthreads)
-
-
-    def initLogging(self) -> None:
+    def initLogging(self, level: str) -> None:
         """Initialize logging."""
+        _log_levels = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20,
+                        "DEBUG": 10, "NOTSET": 0}
+        self.logLevel = (level, _log_levels[level])
         self.log = logging.getLogger("QchemTuning")
-        self.log.setLevel(logging.INFO)
+        self.log.setLevel(self.logLevel[1])
         logStreamHandler = logging.StreamHandler()
-        logStreamHandler.setLevel(logging.INFO)
+        logStreamHandler.setLevel(self.logLevel[1])
         logFormatter = logging.Formatter("%(asctime)s " +
                                        "%(name)s:%(levelname)s " +
                                        "%(message)s")
@@ -62,7 +61,7 @@ class QchemTuning():
         self.log.addHandler(logStreamHandler)
 
 
-    def spinMulti(self, neutral, anion, cation) -> None:
+    def setSpinMultiplicities(self, neutral, anion, cation) -> None:
         """Determine spin multiplicities."""
         self.neutralSpinMulti = neutral if neutral is not None else 1
         self.anionSpinMulti = anion if anion is not None else 2
@@ -80,11 +79,11 @@ class QchemTuning():
             _neutralGeometry = f.readlines()
         self.anionMolecule = f"{self.neutralMolecule.split('.')[0]}_anion.mol"
         self.cationMolecule = f"{self.neutralMolecule.split('.')[0]}_cation.mol"
-        with open(self.anionMolecule, "w") as fanion:
-            fanion.write(_neutralGeometry[0])
-            fanion.write(f"{-1} {self.anionSpinMulti}\n")
+        with open(self.anionMolecule, "w") as _fanion:
+            _fanion.write(_neutralGeometry[0])
+            _fanion.write(f"{-1} {self.anionSpinMulti}\n")
             for line in _neutralGeometry[2:]:
-                fanion.write(line)
+                _fanion.write(line)
         self.log.info(f"Written anion geometry to <{self.anionMolecule}>.")
         with open(self.cationMolecule, "w") as fcation:
             fcation.write(_neutralGeometry[0])
@@ -106,39 +105,95 @@ class QchemTuning():
         self.log.info(f"Written working neutral input to <{self.neutralFile}>")
         
         self.anionFile = f"w{int(self.omega*1000):3}_anion.in"
-        with open(self.anionFile, "w") as fanion:
+        with open(self.anionFile, "w") as _fanion:
             _anionInput = copy.deepcopy(self.neutralInput)
             for j, item in enumerate(_anionInput.input["rem"]):
                 if item[0] == "omega":
                     _anionInput.input["rem"][j][1] = int(self.omega*1000)
                 _anionInput.input["molecule"][0][1] = self.anionMolecule
-            fanion.write(str(_anionInput))
+            _fanion.write(str(_anionInput))
         self.log.info(f"Written working anion input to <{self.anionFile}>")
         
         self.cationFile = f"w{int(self.omega*1000):3}_cation.in"
-        with open(self.cationFile, "w") as fanion:
+        with open(self.cationFile, "w") as _fcation:
             _cationInput = copy.deepcopy(self.neutralInput)
-            for j, item in enumerate(_anionInput.input["rem"]):
+            for j, item in enumerate(_cationInput.input["rem"]):
                 if item[0] == "omega":
-                    _anionInput.input["rem"][j][1] = int(self.omega*1000)
-            _anionInput.input["molecule"][0][1] = self.cationMolecule
-            fanion.write(str(_anionInput))
+                    _cationInput.input["rem"][j][1] = int(self.omega*1000)
+            _cationInput.input["molecule"][0][1] = self.cationMolecule
+            _fcation.write(str(_cationInput))
         self.log.info(f"Written working cation input to <{self.cationFile}>")
 
-    def runCalculations(self, nthreads:int) -> None:
+    def runCalculations(self) -> None:
         """Run three Qchem calculations for anion, cation and neutral."""
-        # Number of Threads
-        self.numThreads = 1 if nthreads is None else nthreads
-
         _calc = QchemCalculation(fname=self.neutralFile,
-                                    nthreads=self.numThreads)
+                                 nthreads=self.numThreads,
+                                 loggerLevel=self.logLevel[0])
         _calc.submit()
 
         _calc = QchemCalculation(fname=self.anionFile,
-                                    nthreads=self.numThreads)
+                                 nthreads=self.numThreads,
+                                 loggerLevel=self.logLevel[0])
         _calc.submit()
 
         _calc = QchemCalculation(fname=self.cationFile,
-                                    nthreads=self.numThreads)
+                                 nthreads=self.numThreads,
+                                 loggerLevel=self.logLevel[0])
         _calc.submit()
+
+    def parseOutput(self) -> None:
+        """Read output files and store relevant data."""
+
+        self.data = {"neutral": {}, "anion": {}, "cation": {}}
+
+        with open(f"{self.neutralFile.split('.')[0]}.out", "r") as nout:
+            _homo = []
+            _lumo = []
+            _lines = nout.readlines()
+            for j, line in enumerate(_lines):
+                if "Convergence criterion met" in line:
+                    self.data["neutral"]["SCFenergy"] = float(line.split()[1])
+                if "-- Virtual --" in line:
+                    _homo.append(float(_lines[j-1].split()[-1]))
+                    _lumo.append(float(_lines[j+1].split()[0]))
+            self.data["neutral"]["HOMO"] = max(_homo)
+            self.data["neutral"]["LUMO"] = min(_lumo)
+
+        with open(f"{self.anionFile.split('.')[0]}.out", "r") as aout:
+            _homo = []
+            _lumo = []
+            _lines = aout.readlines()
+            for j, line in enumerate(_lines):
+                if "Convergence criterion met" in line:
+                    self.data["anion"]["SCFenergy"] = float(line.split()[1])
+                if "-- Virtual --" in line:
+                    _homo.append(float(_lines[j-1].split()[-1]))
+                    _lumo.append(float(_lines[j+1].split()[0]))
+            self.data["anion"]["HOMO"] = max(_homo)
+            self.data["anion"]["LUMO"] = min(_lumo)
+
+        with open(f"{self.cationFile.split('.')[0]}.out", "r") as cout:
+            _homo = []
+            _lumo = []
+            _lines = cout.readlines()
+            for j, line in enumerate(_lines):
+                if "Convergence criterion met" in line:
+                    self.data["cation"]["SCFenergy"] = float(line.split()[1])
+                if "-- Virtual --" in line:
+                    _homo.append(float(_lines[j-1].split()[-1]))
+                    _lumo.append(float(_lines[j+1].split()[0]))
+            self.data["cation"]["HOMO"] = max(_homo)
+            self.data["cation"]["LUMO"] = min(_lumo)
+
+    def calculateOptimalTuning(self) -> None:
+        self.data["tuning"] = {}
+        self.data["tuning"]["IP"] = (self.data["cation"]["SCFenergy"] -
+                                     self.data["neutral"]["SCFenergy"])
+        self.data["tuning"]["EA"] = (self.data["neutral"]["SCFenergy"] -
+                                     self.data["anion"]["SCFenergy"])
+        self.data["tuning"]["JOT"] = ((self.data["tuning"]["IP"] +
+                                       self.data["neutral"]["HOMO"])**2 +
+                                      (self.data["tuning"]["EA"] + 
+                                       self.data["neutral"]["LUMO"])**2)
+
         
