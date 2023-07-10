@@ -10,10 +10,10 @@ import RSHtune as tune
 import argparse as argp
 
 
-def dryRun(inputFile: str, dir: str,
-           multiplicities: list[int]) -> None:
+def dryRun(inputFile: str, dir: str = "",
+           multiplicities: list[int] = []) -> None:
     """Navigate to a directory and analyze tuning files already present."""
-    if dir is not None:
+    if dir != "":
         os.chdir(dir)
     _dirContents = os.listdir('.')
     _omega = {float(i.split("_")[0].split('w')[1])/1000 for i in _dirContents
@@ -23,7 +23,7 @@ def dryRun(inputFile: str, dir: str,
               and f"{i.split('_')[0]}_cation.out" in _dirContents}
     print(f"#omega         J_OT\n{22*'#'}")
     for _o in sorted(list(_omega)):
-        if multiplicities is not None:
+        if multiplicities != []:
             tuning_run = tune.QchemTuning(fname=inputFile,
                                           omega=_o,
                                           nthreads=1,
@@ -45,12 +45,12 @@ def dryRun(inputFile: str, dir: str,
 
 
 def singlePoint(inputFile: str, nthreads: int,
-                omega: float, dir: str,
-                multiplicities: list[int]) -> None:
+                omega: float, dir: str = "",
+                multiplicities: list[int] = []) -> None:
     """Run a single tuning calculation for a given value of omega."""
-    if dir is not None:
+    if dir != "":
         os.chdir(dir)
-    if multiplicities is not None:
+    if multiplicities != []:
         tuning_run = tune.QchemTuning(fname=inputFile,
                                       omega=omega,
                                       nthreads=nthreads,
@@ -74,14 +74,14 @@ def singlePoint(inputFile: str, nthreads: int,
 
 
 def rangeTuning(inputFile: str, nthreads: int,
-                omega: list, dir: str,
-                multiplicities: list[int]) -> None:
+                omega: list, dir: str = "",
+                multiplicities: list[int] = []) -> None:
     """Run a series of tuning calculation over a range of omega."""
-    if dir is not None:
+    if dir != "":
         os.chdir(dir)
     print(f"#omega         J_OT\n{22*'#'}")
     for _o in omega:
-        if multiplicities is not None:
+        if multiplicities != []:
             tuning_run = tune.QchemTuning(fname=inputFile,
                                           omega=_o,
                                           nthreads=nthreads,

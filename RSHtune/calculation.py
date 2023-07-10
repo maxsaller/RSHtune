@@ -27,11 +27,11 @@ class QchemCalculation():
         self.log.info(f"Using molecular geometry in <{self.molecule}>.")
 
         # Jobname
-        self.jobName = fname.split(".")[0] if jname is "" else jname
+        self.jobName = fname.split(".")[0] if jname == "" else jname
         self.log.info(f"This Qchem job will use jobname '{self.jobName}'.")
 
         # Number of Threads
-        self.numThreads = 1 if nthreads is 0 else nthreads
+        self.numThreads = 1 if nthreads == 0 else nthreads
 
     def initLogging(self, level: str) -> None:
         """Initialize logging."""

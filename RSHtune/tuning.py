@@ -34,7 +34,7 @@ class QchemTuning():
         self.neutralMolecule = self.neutralInput.input["molecule"][0][1]
 
         # Number of Threads
-        self.numThreads = 1 if nthreads is 0 else nthreads
+        self.numThreads = 1 if nthreads == 0 else nthreads
 
         self.setSpinMultiplicities(neutralSpMlt, anionSpMlt, cationSpMlt)
         self.createGeometries()
@@ -59,9 +59,9 @@ class QchemTuning():
 
     def setSpinMultiplicities(self, neutral, anion, cation) -> None:
         """Determine spin multiplicities."""
-        self.neutralSpinMulti = neutral if neutral is not 0 else 1
-        self.anionSpinMulti = anion if anion is not 0 else 2
-        self.cationSpinMulti = cation if cation is not 0 else 2
+        self.neutralSpinMulti = neutral if neutral != 0 else 1
+        self.anionSpinMulti = anion if anion != 0 else 2
+        self.cationSpinMulti = cation if cation != 0 else 2
 
         self.log.info("Geometry and Spin Multiplicities:")
         self.log.info(f"  - Neutral geometry:     <{self.neutralMolecule}>")
