@@ -116,9 +116,9 @@ if __name__ == "__main__":
                         metavar="float", help="Single value for omega.")
     parser.add_argument("--omegaRange", type=float, nargs="*",
                         metavar="float", help="Range of omega values.")
-    parser.add_argument("--dir", type=str, default=None, metavar="dir",
+    parser.add_argument("--dir", type=str, default="", metavar="dir",
                         help="Working directory if different to CWD.")
-    parser.add_argument("--multiplicities", nargs=3, type=int, default=None,
+    parser.add_argument("--multiplicities", nargs=3, type=int, default=[],
                         metavar="int int int",
                         help="Spin-multiplicities: neutral anion cation.")
     parser.add_argument("--dry", action="store_true", default=False,
