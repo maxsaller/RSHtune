@@ -29,7 +29,8 @@ class QchemTuning():
             sys.exit()
 
         # Neutral Input
-        self.neutralInput = QchemInput(fname=fname,
+        self.inputName = fname
+        self.neutralInput = QchemInput(fname=self.inputName,
                                        loggerLevel=self.logLevel[0])
         self.neutralMolecule = self.neutralInput.input["molecule"][0][1]
 
@@ -102,7 +103,8 @@ class QchemTuning():
 
         self.anionFile = f"w{int(self.omega*1000):3}_anion.in"
         with open(self.anionFile, "w") as _fanion:
-            _anionInput = copy.deepcopy(self.neutralInput)
+            _anionInput = QchemInput(fname=self.inputName,
+                                     loggerLevel=self.logLevel[0])
             for j, item in enumerate(_anionInput.input["rem"]):
                 if item[0] == "omega":
                     _anionInput.input["rem"][j][1] = int(self.omega*1000)
@@ -112,7 +114,8 @@ class QchemTuning():
 
         self.cationFile = f"w{int(self.omega*1000):3}_cation.in"
         with open(self.cationFile, "w") as _fcation:
-            _cationInput = copy.deepcopy(self.neutralInput)
+            _cationInput = QchemInput(fname=self.inputName,
+                                      loggerLevel=self.logLevel[0])
             for j, item in enumerate(_cationInput.input["rem"]):
                 if item[0] == "omega":
                     _cationInput.input["rem"][j][1] = int(self.omega*1000)
