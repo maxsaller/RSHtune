@@ -6,7 +6,6 @@ Dependencies: os,sys, copy, logging
 """
 import os
 import sys
-import copy
 import logging
 from .input import QchemInput
 from .calculation import QchemCalculation
@@ -29,7 +28,8 @@ class QchemTuning():
             sys.exit()
 
         # Neutral Input
-        self.neutralInput = QchemInput(fname=fname,
+        self.inputFile = fname
+        self.neutralInput = QchemInput(fname=self.inputFile,
                                        loggerLevel=self.logLevel[0])
         self.neutralMolecule = self.neutralInput.input["molecule"][0][1]
 
@@ -91,7 +91,7 @@ class QchemTuning():
     def createInputFiles(self, omega: float) -> None:
         """Create input files."""
         self.omega = omega
-        self.neutralFile = f"w{int(self.omega*1000):3}_neutral.in"
+        self.neutralFile = f"w{int(self.omega*1000):0>3}_neutral.in"
         with open(self.neutralFile, "w") as fneutral:
             for j, item in enumerate(self.neutralInput.input["rem"]):
                 if item[0] == "omega":
@@ -100,9 +100,10 @@ class QchemTuning():
             fneutral.write(str(self.neutralInput))
         self.log.info(f"Written working neutral input to <{self.neutralFile}>")
 
-        self.anionFile = f"w{int(self.omega*1000):3}_anion.in"
+        self.anionFile = f"w{int(self.omega*1000):0>3}_anion.in"
         with open(self.anionFile, "w") as _fanion:
-            _anionInput = copy.deepcopy(self.neutralInput)
+            _anionInput = QchemInput(fname=self.inputFile,
+                                     loggerLevel=self.logLevel[0])
             for j, item in enumerate(_anionInput.input["rem"]):
                 if item[0] == "omega":
                     _anionInput.input["rem"][j][1] = int(self.omega*1000)
@@ -110,9 +111,10 @@ class QchemTuning():
             _fanion.write(str(_anionInput))
         self.log.info(f"Written working anion input to <{self.anionFile}>")
 
-        self.cationFile = f"w{int(self.omega*1000):3}_cation.in"
+        self.cationFile = f"w{int(self.omega*1000):0>3}_cation.in"
         with open(self.cationFile, "w") as _fcation:
-            _cationInput = copy.deepcopy(self.neutralInput)
+            _cationInput = QchemInput(fname=self.inputFile,
+                                      loggerLevel=self.logLevel[0])
             for j, item in enumerate(_cationInput.input["rem"]):
                 if item[0] == "omega":
                     _cationInput.input["rem"][j][1] = int(self.omega*1000)
