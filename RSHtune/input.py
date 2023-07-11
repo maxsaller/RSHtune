@@ -42,7 +42,7 @@ class QchemInput():
             self.log.handlers.clear()
         self.log.addHandler(logStreamHandler)
 
-    def parseInput(self, content: list[str]) -> None:
+    def parseInput(self, content: list) -> None:
         """Parse contents of a provided input file."""
         key = None
         self.input = {}
@@ -57,7 +57,7 @@ class QchemInput():
         self.log.info(f"Read {len(content)} lines, " +
                       f"finding {len(self.input.keys())} input sections.")
 
-    def lineParse(self, line: str) -> list[str]:
+    def lineParse(self, line: str) -> list:
         """Extract line arguments and unify styling."""
         ln = line.split("#")[0].split("!")[0]
         ln = ln.strip().split()

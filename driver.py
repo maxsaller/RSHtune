@@ -11,7 +11,7 @@ import argparse as argp
 
 
 def dryRun(inputFile: str, dir: str = "",
-           multiplicities: list[int] = []) -> None:
+           multiplicities: list = []) -> None:
     """Navigate to a directory and analyze tuning files already present."""
     if dir != "":
         os.chdir(dir)
@@ -46,7 +46,7 @@ def dryRun(inputFile: str, dir: str = "",
 
 def singlePoint(inputFile: str, nthreads: int,
                 omega: float, dir: str = "",
-                multiplicities: list[int] = []) -> None:
+                multiplicities: list = []) -> None:
     """Run a single tuning calculation for a given value of omega."""
     if dir != "":
         os.chdir(dir)
@@ -75,7 +75,7 @@ def singlePoint(inputFile: str, nthreads: int,
 
 def rangeTuning(inputFile: str, nthreads: int,
                 omega: list, dir: str = "",
-                multiplicities: list[int] = []) -> None:
+                multiplicities: list = []) -> None:
     """Run a series of tuning calculation over a range of omega."""
     if dir != "":
         os.chdir(dir)
