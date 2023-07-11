@@ -92,7 +92,7 @@ class QchemTuning():
     def createInputFiles(self, omega: float) -> None:
         """Create input files."""
         self.omega = omega
-        self.neutralFile = f"w{int(self.omega*1000):3}_neutral.in"
+        self.neutralFile = f"w{int(self.omega*1000):0>3}_neutral.in"
         with open(self.neutralFile, "w") as fneutral:
             for j, item in enumerate(self.neutralInput.input["rem"]):
                 if item[0] == "omega":
@@ -101,7 +101,7 @@ class QchemTuning():
             fneutral.write(str(self.neutralInput))
         self.log.info(f"Written working neutral input to <{self.neutralFile}>")
 
-        self.anionFile = f"w{int(self.omega*1000):3}_anion.in"
+        self.anionFile = f"w{int(self.omega*1000):0>3}_anion.in"
         with open(self.anionFile, "w") as _fanion:
             _anionInput = QchemInput(fname=self.inputName,
                                      loggerLevel=self.logLevel[0])
@@ -112,7 +112,7 @@ class QchemTuning():
             _fanion.write(str(_anionInput))
         self.log.info(f"Written working anion input to <{self.anionFile}>")
 
-        self.cationFile = f"w{int(self.omega*1000):3}_cation.in"
+        self.cationFile = f"w{int(self.omega*1000):0>3}_cation.in"
         with open(self.cationFile, "w") as _fcation:
             _cationInput = QchemInput(fname=self.inputName,
                                       loggerLevel=self.logLevel[0])
