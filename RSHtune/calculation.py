@@ -60,6 +60,8 @@ class QchemCalculation():
                             f"{self.numThreads}",
                             f"{self.jobName}.in",
                             f"{self.jobName}.out",
-                            f"{self.jobName}"], capture_output=True)
+                            f"{self.jobName}"],
+			    stdout=sb.PIPE,
+			    stderr=sb.STDOUT)
         self.log.info(f"Completed Qchem run in {time.time() - _start:.1f}s.")
         self.log.info(f"Output written to <{self.jobName}.out>.")
